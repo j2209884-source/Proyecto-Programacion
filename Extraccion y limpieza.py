@@ -125,27 +125,78 @@ def insertar_catalogos(conexion, indicadores_map, estados_map):
     cursor = conexion.cursor()
 
 
+    """
+    Validar que no dupliquen los Estados
+    """
+
+    cursor.execute("SELECT COUNT(*) FROM estados")
+
+    cant_est = cursor.fetchone()[0]
 
 
+    if cant_est > 0:
+        print("La tabla ya tiene los Estados, no sera necesario insertarlos nuevamente <:")
+
+    else:
+        for id_est, nombre_est in estados_map.items():
+            cursor.execute(
+                "INSERT INTO estados(id_estado, nom_Est) VALUES (%s, %s)",
+                (int(id_est, nombre_est))
+            )
+        print("Se insertaron los Estados")
+
+
+    """
+    Validar que no se dupliquen los indicadores
+    """
+    cursor.execute("SELECT COUNT(*) FROM indicadores")
+    cant_ind = cursor.fetchone()[0]
+
+    if cant_ind > 0:
+        print("La tabla ya tiene los Indicadores")
+    else:
+        for id_ind, nombre in indicadores_map.items():
+            cursor.execute(
+                "INSERT INTO indicadores(id_indicador, nom_Ind) VALUES (%s, %s)",
+                (int(id_ind), nombre)
+            )
+        print("Se insertaron los Indicadores")
+
+    conexion.commit()
+    cursor.close()
 
 
 def insertar_datos(conexion, df):
-  try:
-      cursor = conexion.cursor()
-      sql = """
-               INSERT INTO datos(año, id_estado, valor, id_indicador) VALUES (%s, %s, %s, %s)
-            """
-      for indice, fila in df.iterrows():
-          cursor.execute(sql, (
-              int(fila["Año"]),
-              int(fila["Clave_Estado"]),
-              float(fila["Valor"]),
-              int(fila["Indicador"])
-          ))
-      conexion.commit()
-      print("Datos insertados correctamente.")
-  except Error as e:
-      print("Error al insertar datos:", e)
+    cursor = conexion.cursor()
+
+    """
+    Validacion por si ya hay registros
+    """
+    cursor.execute("SELECT COUNT(*) FROM datos")
+    cantidad = cursor.fetchone()[0]
+
+    if cantidad > 0:
+        print("La tabla ya tiene los Datos")
+        cursor.close()
+        return
+
+    """
+    Insertar datos si la tabla está vacía
+    """
+    sql = "INSERT INTO datos(año, id_estado, valor, id_indicador) VALUES (%s, %s, %s, %s)"
+
+    for indice, fila in df.iterrows():
+        cursor.execute(sql, (
+            int(fila["Año"]),
+            int(fila["Clave_Estado"]),
+            float(fila["Valor"]),
+            int(fila["Indicador"])
+        ))
+
+    conexion.commit()
+    cursor.close()
+    print("Los Datos se han insertado")
+
 
 
 if __name__ == "__main__":
