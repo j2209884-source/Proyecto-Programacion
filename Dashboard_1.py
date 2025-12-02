@@ -165,6 +165,11 @@ def crear_graficos(df):
 
 
 
+
+    # Mostrar DataFrame
+    st.subheader("Descargas sin tratamiento (Lago)")
+    st.dataframe(df)
+
 def app_stremalit(df):
     st.title("Dashboard Nacional del Agua en México (2016–2020)")
     st.markdown("**Análisis de indicadores de infraestructura hídrica por estado**")
