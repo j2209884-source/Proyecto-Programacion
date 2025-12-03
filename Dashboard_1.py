@@ -61,7 +61,7 @@ def crear_graficos(df):
     col1, col2 = st.columns(2, gap="large") #Controla el espacio entre columnas
     with col1:
         # Gráfico 1
-        st.markdown("Descargas sin Tratamiento (Río)")
+        st.subheader("DDescargas sin Tratamiento (Río)")
         fig_sin_tratamiento_rio = px.bar(
             df_filtrado,
             x="descargas_sin_tratamiento_rio",
@@ -216,8 +216,8 @@ def crear_graficos(df):
 
 def app_streamlit(df):
     # Configuración página
+    # lograr que los graficos ocupen toda la pagina y no solo esten en el centro
     st.set_page_config(page_title="Dashboard Nacional del Agua en México",layout="wide")
-
     st.title("💧 Dashboard Nacional del Agua en México (2016–2020)")
     st.subheader("**Análisis de indicadores de infraestructura hídrica por estado**")
     st.divider()
