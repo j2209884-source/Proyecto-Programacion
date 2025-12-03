@@ -10,7 +10,7 @@ import plotly.express as px
 
 @st.cache_data
 def cargar_datos():
-    df = pd.read_csv("datos_formato_ancho.csv")
+    df = pd.read_csv("dataframes/datos_formato_ancho.csv")
     return df
 
 def dashboard(df):
