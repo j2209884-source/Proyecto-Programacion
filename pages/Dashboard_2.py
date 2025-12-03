@@ -1,6 +1,4 @@
-import plotly
 import requests
-import json
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -8,12 +6,12 @@ import plotly.graph_objects as go
 
 
 @st.cache_data
-def cargar_datos():
-    df = pd.read_csv("dataframes/datos_formato_ancho.csv")
+def leer_archivo(ruta):
+    df = pd.read_csv(ruta)
     return df
 
 
-def dashboard(df):
+def crear_graficos(df):
 
     st.header("Dashboard de Evolución del Agua en México (INEGI)")
     st.write("Indicadores de descargas, tomas y tratamiento del agua (2016–2020)")
@@ -122,14 +120,14 @@ def dashboard(df):
     st.dataframe(df_f)
 
 
-def app_streamlit_dashboard(df):
+def app():
     st.set_page_config(page_title="Dashboard Evolución del Agua en México", layout="wide")
     st.title("Dashboard Evolución del Agua (2016–2020)")
     st.subheader("**Visualización dinámica por estado y año**")
     st.divider()
 
-    dashboard(df)
+    df = leer_archivo("dataframes/datos_formato_ancho.csv")
+    crear_graficos(df)
 
 if __name__ == "__main__":
-    df_d = cargar_datos()
-    app_streamlit_dashboard(df_d)
+    app()
