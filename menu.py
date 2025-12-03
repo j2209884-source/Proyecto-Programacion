@@ -1,6 +1,6 @@
 import streamlit as st
 
-from pages import a.py
+from pages import Dashboard_1,Dashboard_2,Dashboard_3
 
 st.set_page_config(page_title="Proyecto Final", layout="wide")
 
@@ -13,8 +13,8 @@ if page == "Inicio":
     st.markdown("Bienvenida e instrucciones...")
     st.write("")
 elif page == "Dashboard 1":
-    a.py.app()   # función que creaste dentro de dashboard1.py
+    Dashboard_1.py.app()
 elif page == "Dashboard 2":
-    dashboard2.app()
+    Dashboard_2.app()
 elif page == "Dashboard 3":
-    dashboard3.app()
+    Dashboard_3.app()

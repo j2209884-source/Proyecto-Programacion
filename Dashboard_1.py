@@ -217,7 +217,7 @@ def crear_graficos(df):
         st.plotly_chart(fig_relacion, use_container_width=True)
 
 
-def app_streamlit():
+def app():
     # Configuración página
     # lograr que los graficos ocupen toda la pagina y no solo esten en el centro
     st.set_page_config(page_title="Dashboard Nacional del Agua en México", layout="wide")
@@ -231,7 +231,7 @@ def app_streamlit():
 
 
 if __name__ == "__main__":
-    app_streamlit()
+    app()
 
 import pandas as pd
 import streamlit as st
@@ -452,7 +452,7 @@ def crear_graficos(df):
         st.plotly_chart(fig_relacion, use_container_width=True)
 
 
-def app_streamlit():
+def app():
     # Configuración página
     # lograr que los graficos ocupen toda la pagina y no solo esten en el centro
     st.set_page_config(page_title="Dashboard Nacional del Agua en México", layout="wide")
@@ -466,5 +466,5 @@ def app_streamlit():
 
 
 if __name__ == "__main__":
-    app_streamlit()
+    app()
 
