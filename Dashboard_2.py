@@ -4,8 +4,7 @@ import json
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-
-
+import plotly.graph_objects as go
 
 
 @st.cache_data
@@ -13,213 +12,124 @@ def cargar_datos():
     df = pd.read_csv("dataframes/datos_formato_ancho.csv")
     return df
 
+
 def dashboard(df):
 
-    st.title("Dashboard de Evolución del Agua en México (INEGI)")
-    st.write("Indicadores relacionados con descargas de agua sin tratar")
+    st.header("Dashboard de Evolución del Agua en México (INEGI)")
+    st.write("Indicadores de descargas, tomas y tratamiento del agua (2016–2020)")
 
-    # Lista de indicadores (todas las columnas excepto estas)
-    columnas_fijas = ["Estado", "Clave_Estado", "Año"]
-    indicadores = [c for c in df.columns if c not in columnas_fijas]
-
-    # ------------------------------------
-    # FILTROS
-    # ------------------------------------
+    #-------------------------------------------
+    #   FILTROS
+    #-------------------------------------------
     st.sidebar.header("Filtros")
 
-    # 1) Selector de Estado
-    estado_sel = st.sidebar.selectbox(
-        "Selecciona un estado",
-        ["Todos"] + sorted(df["Estado"].unique())
-    )
+    estados = ["Todos"] + sorted(df["Estado"].unique())
+    estado_sel = st.sidebar.selectbox("Selecciona un estado", estados)
 
-    # 2) Selector de Indicadores
-    st.sidebar.write("### Indicadores disponibles:")
-
-    lista_indicadores = [
-        "descargas_municipales_sin_tratamiento",
-        "descargas_sin_tratamiento_lago",
-        "descargas_sin_tratamiento_mar",
-        "descargas_sin_tratamiento_rio"
-    ]
-
-    indicadores_sel = []
-
-    for ind in lista_indicadores:
-        if st.sidebar.checkbox(ind, value=True):
-            indicadores_sel.append(ind)
-
-    # Evitar error si no seleccionan ninguno
-    if len(indicadores_sel) == 0:
-        st.warning("Selecciona al menos un indicador para visualizar datos.")
-        st.stop()
-
-    # 3) Filtro de años
     años = st.sidebar.slider(
         "Rango de años",
-        int(df["Año"].min()),
-        int(df["Año"].max()),
+        min(df["Año"]),
+        max(df["Año"]),
         (2016, 2020)
     )
 
-    # Aplicar filtros al dataframe
-    df_f = df.copy()
+    estado_linea = st.sidebar.selectbox(
+        "Estado para línea individual",
+        sorted(df["Estado"].unique())
+    )
 
-    # Filtrar por estado si no es "Todos"
+    df_f = df[(df["Año"] >= años[0]) & (df["Año"] <= años[1])]
+
     if estado_sel != "Todos":
         df_f = df_f[df_f["Estado"] == estado_sel]
 
-    # Filtrar años
-    df_f = df_f[(df_f["Año"] >= años[0]) & (df_f["Año"] <= años[1])]
+    #-------------------------------------------
+    #   KPIs
+    #-------------------------------------------
+    st.subheader("Indicadores Clave (2016 → 2020)")
 
-    # ------------------------------------
-    # MÉTRICAS CLAVE
-    # ------------------------------------
-    st.subheader("  Métricas Clave")
+    col1, col2, col3 = st.columns(3)
 
-    col2, col3, col4 = st.columns(3)
+    df_2016 = df[df["Año"] == 2016]
+    df_2020 = df[df["Año"] == 2020]
 
-    # Indicadores seleccionados
-    indic_cols = indicadores_sel
+    # KPI 1
+    d2016 = df_2016["descargas_municipales_sin_tratamiento"].sum()
+    d2020 = df_2020["descargas_municipales_sin_tratamiento"].sum()
+    col1.metric("% cambio descargas sin tratamiento", f"{((d2020 - d2016) / d2016) * 100:.2f}%")
 
+    # KPI 2
+    m2016 = df_2016["tomas_macromedidor_funcionando"].sum()
+    m2020 = df_2020["tomas_macromedidor_funcionando"].sum()
+    col2.metric("% cambio macromedidores funcionando", f"{((m2020 - m2016) / m2016) * 100:.2f}%")
 
-    # METRICA 2: % variación 2016 → 2020
-    df_2016 = df[df["Año"] == 2016][indic_cols].sum()
-    df_2020 = df[df["Año"] == 2020][indic_cols].sum()
-    variacion = ((df_2020.sum() - df_2016.sum()) / df_2016.sum()) * 100
-    col2.metric("% Variación 2016 → 2020", f"{variacion:.2f}%")
+    # KPI 3
+    prom_nac = df["descargas_municipales_sin_tratamiento"].mean()
+    prom_sel = df_f["descargas_municipales_sin_tratamiento"].mean()
+    col3.metric("Promedio Nacional / Selección", f"{prom_nac:.1f} / {prom_sel:.1f}")
 
-    # MÉTRICA 3: Estado con mayor reducción / incremento
-    df_estados = df.groupby("Estado")[indic_cols].sum().sum(axis=1)
-    estado_max = df_estados.idxmax()
-    estado_min = df_estados.idxmin()
+    #-------------------------------------------
+    # VISUALIZACIONES
+    #-------------------------------------------
 
-    col3.metric("Mayor incremento", estado_max)
-    col4.metric("Mayor reducción", estado_min)
+    st.header("Visualizaciones Principales")
 
-    # ------------------------------------
-    # PROMEDIO NACIONAL VS ESTADOS SELECCIONADOS
-    # ------------------------------------
-    promedio_nacional = df[indic_cols].mean().mean()
-    promedio_estados = df_f[indic_cols].mean().mean()
+    st.subheader("Evolución nacional – tomas sin macromedidor")
+    df_line1 = df.groupby("Año")["tomas_sin_macromedidor"].sum().reset_index()
+    st.plotly_chart(px.line(df_line1, x="Año", y="tomas_sin_macromedidor", markers=True), use_container_width=True)
 
-    st.metric(
-        "Promedio Nacional vs Estados Seleccionados",
-        f"Nacional: {promedio_nacional:.2f} | Seleccionados: {promedio_estados:.2f}"
+    st.subheader("Evolución nacional – tomas con macromedidor funcionando")
+    df_line2 = df.groupby("Año")["tomas_macromedidor_funcionando"].sum().reset_index()
+    st.plotly_chart(px.line(df_line2, x="Año", y="tomas_macromedidor_funcionando", markers=True), use_container_width=True)
+
+    st.subheader("Evolución nacional – descargas municipales sin tratamiento")
+    df_line3 = df.groupby("Año")["descargas_municipales_sin_tratamiento"].sum().reset_index()
+    st.plotly_chart(px.line(df_line3, x="Año", y="descargas_municipales_sin_tratamiento", markers=True), use_container_width=True)
+
+    st.subheader("Área apilada – Descargas sin tratamiento (Río, Mar, Lago)")
+    df_area = df.groupby("Año")[
+        ["descargas_sin_tratamiento_rio",
+         "descargas_sin_tratamiento_mar",
+         "descargas_sin_tratamiento_lago"]
+    ].sum().reset_index()
+
+    st.plotly_chart(px.area(df_area, x="Año", y=df_area.columns[1:]), use_container_width=True)
+
+    st.subheader(f"Evolución de descargas municipales – {estado_linea}")
+    df_st = df[df["Estado"] == estado_linea].groupby("Año")[
+        "descargas_municipales_sin_tratamiento"
+    ].sum().reset_index()
+
+    st.plotly_chart(px.line(df_st, x="Año", y="descargas_municipales_sin_tratamiento", markers=True), use_container_width=True)
+
+    st.subheader("Mapa de calor – Descargas sin tratamiento (Año vs Estado)")
+    df_heat = df.pivot_table(
+        index="Estado",
+        columns="Año",
+        values="descargas_municipales_sin_tratamiento",
+        aggfunc="sum"
     )
+    st.plotly_chart(px.imshow(df_heat, aspect="auto", color_continuous_scale="Reds"), use_container_width=True)
 
-    # ------------------------------------
-    # GRÁFICA PRINCIPAL - LÍNEAS
-    # ------------------------------------
-    st.subheader("Evolución de los indicadores seleccionados")
-    df_long = df_f.melt(
-        id_vars=["Estado", "Año"],
-        value_vars=indicadores_sel,
-        var_name="Indicador",
-        value_name="Valor"
-    )
+    st.subheader("Tomas públicas – comparación 2016 vs 2020")
+    df_cmp = df[df["Año"].isin([2016, 2020])].groupby("Año")[
+        "tomas_abastecimiento_publico"
+    ].sum().reset_index()
 
-    fig = plotly.express.line(
-        df_long,
-        x="Año",
-        y="Valor",
-        color="Indicador",
-        markers=True,
-        title="Tendencia histórica"
-    )
+    st.plotly_chart(px.bar(df_cmp, x="Año", y="tomas_abastecimiento_publico", text="tomas_abastecimiento_publico"), use_container_width=True)
 
-    st.plotly_chart(fig, use_container_width=True)
-
-    # GRAFICA DE BARRAS
-    st.subheader("Comparación entre estados")
-
-    fig2 = plotly.express.bar(
-        df_long,
-        x="Estado",
-        y="Valor",
-        color="Indicador",
-        barmode="group",
-        title="Comparación por Estado"
-    )
-
-    st.plotly_chart(fig2, use_container_width=True)
-    # -------------------------------------------------------------
-    # HEATMAP POR ESTADO (USANDO URL)
-    # -------------------------------------------------------------
-    st.subheader("Mapa de Intensidad de Descargas sin Tratamiento")
-
-    # Sumar los indicadores seleccionados por estado
-    df_mapa = df_f.groupby("Estado")[indicadores_sel].sum().sum(axis=1).reset_index()
-    df_mapa.columns = ["Estado", "Total_Descargas"]
-
-    # Cargar GeoJSON
-    url_geojson = "https://raw.githubusercontent.com/angelnmara/geojson/master/mexicoHigh.json"
-    geojson_mex = requests.get(url_geojson).json()
-
-    # Crear mapa
-    fig_mapa = plotly.express.choropleth(
-        df_mapa,
-        geojson=geojson_mex,
-        locations="Estado",
-        featureidkey="properties.name",
-        color="Total_Descargas",
-        color_continuous_scale="Reds",
-        title="Intensidad de descargas sin tratamiento por estado"
-    )
-
-    fig_mapa.update_geos(fitbounds="locations", visible=False)
-    st.plotly_chart(fig_mapa, use_container_width=True)
-
-    # -------------------------------------------------------------
-    # 2) RANKING DE ESTADOS
-    st.subheader("Ranking de estados con más descargas sin tratamiento")
-
-    df_rank = df_f.groupby("Estado")[indicadores_sel].sum().sum(axis=1).reset_index()
-    df_rank.columns = ["Estado", "Total"]
-
-    df_rank = df_rank.sort_values("Total", ascending=False)
-
-    fig_rank = plotly.express.bar(
-        df_rank,
-        x="Estado",
-        y="Total",
-        title="Ranking de estados con mayores descargas sin tratamiento",
-        text="Total"
-    )
-
-    fig_rank.update_traces(textposition="outside")
-    st.plotly_chart(fig_rank, use_container_width=True)
-
-    # -------------------------------------------------------------
-    # 3) COMPOSICIÓN POR ESTADO
-    # -------------------------------------------------------------
-    st.subheader("Composición de descargas por estado")
-
-    # Agrupar por estado solo los indicadores seleccionados
-    df_stack = df_f.groupby("Estado")[indicadores_sel].sum().reset_index()
-
-    df_stack_long = df_stack.melt(
-        id_vars="Estado",
-        value_vars=indicadores_sel,
-        var_name="Tipo_descarga",
-        value_name="Valor"
-    )
-
-    fig_stack = plotly.express.bar(
-        df_stack_long,
-        x="Estado",
-        y="Valor",
-        color="Tipo_descarga",
-        title="Composición de descargas (río, lago, mar, municipales) por estado",
-        barmode="stack"
-    )
-
-    st.plotly_chart(fig_stack, use_container_width=True)
-
-    # TABLA FILTRADA
     st.subheader("Datos filtrados")
     st.dataframe(df_f)
 
-if __name__=="__main__":
+
+def app_streamlit_dashboard(df):
+    st.set_page_config(page_title="Dashboard Evolución del Agua en México", layout="wide")
+    st.title("Dashboard Evolución del Agua (2016–2020)")
+    st.subheader("**Visualización dinámica por estado y año**")
+    st.divider()
+
+    dashboard(df)
+
+if __name__ == "__main__":
     df_d = cargar_datos()
-    dashboard(df_d)
+    app_streamlit_dashboard(df_d)
