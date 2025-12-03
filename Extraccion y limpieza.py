@@ -60,7 +60,7 @@ def extraer_api(indicadores_map, estados_map):
 
 
   df = pd.DataFrame(todas_filas)
-  df.to_csv("DatosAPIs_sin_formato.csv", index=False)
+  df.to_csv("dataframes/DatosAPIs_sin_formato.csv", index=False)
   return df
 
 
@@ -92,7 +92,7 @@ def limpiar_datos(ruta_csv):
 
    # Orden correcto de columnas (formato largo)
    df_filtrado = df_filtrado[["Indicador", "Nombre_Indicador", "Año", "Estado", "Clave_Estado", "Valor"]]
-   df_filtrado.to_csv("datos_formato_largo.csv", index=False)
+   df_filtrado.to_csv("dataframes/datos_formato_largo.csv", index=False)
 
 
    # Reorganizar Columnas (Formato ancho)
@@ -100,7 +100,7 @@ def limpiar_datos(ruta_csv):
 
 
    # Formato ancho en CSV para Dashboard
-   df_ancho.to_csv("datos_formato_ancho.csv", index=False)
+   df_ancho.to_csv("dataframes/datos_formato_ancho.csv", index=False)
    return df_filtrado
 
 
@@ -201,7 +201,7 @@ def insertar_datos(conexion, df):
 
 if __name__ == "__main__":
   df_raw=extraer_api(indicadores,estados)
-  df_limpio = limpiar_datos("DatosAPIs_sin_formato.csv")
+  df_limpio = limpiar_datos("dataframes/DatosAPIs_sin_formato.csv")
   conexion = conectar()
   if conexion:
       insertar_catalogos(conexion,indicadores,estados)
