@@ -4,7 +4,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 
-
+# para que no se repita la lectura del archivo CSV
 @st.cache_data
 def leer_archivo(ruta):
     df = pd.read_csv(ruta)
@@ -12,7 +12,7 @@ def leer_archivo(ruta):
 
 
 def crear_graficos(df):
-
+    # Titulos principales
     st.header("Dashboard de Evolución del Agua en México (INEGI)")
     st.write("Indicadores de descargas, tomas y tratamiento del agua (2016–2020)")
 
@@ -24,6 +24,7 @@ def crear_graficos(df):
     estados = ["Todos"] + sorted(df["Estado"].unique())
     estado_sel = st.sidebar.selectbox("Selecciona un estado", estados)
 
+    # Barra deslizante de años
     años = st.sidebar.slider(
         "Rango de años",
         min(df["Año"]),
@@ -31,6 +32,7 @@ def crear_graficos(df):
         (2016, 2020)
     )
 
+    #   para elegir un estado
     estado_linea = st.sidebar.selectbox(
         "Estado para línea individual",
         sorted(df["Estado"].unique())
@@ -72,18 +74,22 @@ def crear_graficos(df):
 
     st.header("Visualizaciones Principales")
 
+    # Grafica 1: Linea del tiempo
     st.subheader("Evolución nacional – tomas sin macromedidor")
     df_line1 = df.groupby("Año")["tomas_sin_macromedidor"].sum().reset_index()
     st.plotly_chart(px.line(df_line1, x="Año", y="tomas_sin_macromedidor", markers=True), use_container_width=True)
 
+    # Grafica 2: Linea del tiempo
     st.subheader("Evolución nacional – tomas con macromedidor funcionando")
     df_line2 = df.groupby("Año")["tomas_macromedidor_funcionando"].sum().reset_index()
     st.plotly_chart(px.line(df_line2, x="Año", y="tomas_macromedidor_funcionando", markers=True), use_container_width=True)
 
+    # Grafica 3: Linea del tiempo
     st.subheader("Evolución nacional – descargas municipales sin tratamiento")
     df_line3 = df.groupby("Año")["descargas_municipales_sin_tratamiento"].sum().reset_index()
     st.plotly_chart(px.line(df_line3, x="Año", y="descargas_municipales_sin_tratamiento", markers=True), use_container_width=True)
 
+    # Grafica 4
     st.subheader("Área apilada – Descargas sin tratamiento (Río, Mar, Lago)")
     df_area = df.groupby("Año")[
         ["descargas_sin_tratamiento_rio",
@@ -93,6 +99,8 @@ def crear_graficos(df):
 
     st.plotly_chart(px.area(df_area, x="Año", y=df_area.columns[1:]), use_container_width=True)
 
+
+    # Grafica 5: Linea
     st.subheader(f"Evolución de descargas municipales – {estado_linea}")
     df_st = df[df["Estado"] == estado_linea].groupby("Año")[
         "descargas_municipales_sin_tratamiento"
@@ -100,6 +108,7 @@ def crear_graficos(df):
 
     st.plotly_chart(px.line(df_st, x="Año", y="descargas_municipales_sin_tratamiento", markers=True), use_container_width=True)
 
+    #  Grafica 6: Mapa de calor
     st.subheader("Mapa de calor – Descargas sin tratamiento (Año vs Estado)")
     df_heat = df.pivot_table(
         index="Estado",
@@ -109,6 +118,7 @@ def crear_graficos(df):
     )
     st.plotly_chart(px.imshow(df_heat, aspect="auto", color_continuous_scale="Reds"), use_container_width=True)
 
+    # Grafica 7: Barras
     st.subheader("Tomas públicas – comparación 2016 vs 2020")
     df_cmp = df[df["Año"].isin([2016, 2020])].groupby("Año")[
         "tomas_abastecimiento_publico"

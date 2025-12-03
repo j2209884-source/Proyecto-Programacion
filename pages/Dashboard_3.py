@@ -5,11 +5,12 @@ import plotly
 import requests
 import json
 
-
+# para que no se repita la lectura del archivo CSV
 @st.cache_data
 def leer_archivo(ruta):
     df = pd.read_csv(ruta)
 
+    # Sumamos todos los tipos de descargas de agua sucia
     df["descargas_totales"] = (
         df["descargas_municipales_sin_tratamiento"] +
         df["descargas_sin_tratamiento_lago"] +
@@ -17,6 +18,8 @@ def leer_archivo(ruta):
         df["descargas_sin_tratamiento_rio"]
     )
 
+
+    # Sumamos todas las tomas de agua
     df["tomas_totales"] = (
         df["tomas_abastecimiento_publico"] +
         df["tomas_macromedidor_descompuesto"] +
@@ -24,6 +27,7 @@ def leer_archivo(ruta):
         df["tomas_sin_macromedidor"]
     )
 
+    # Sumamos las tomas que tienen problemas
     df["tomas_sin_medidor"] = (
         df["tomas_macromedidor_descompuesto"] +
         df["tomas_sin_macromedidor"]
@@ -42,6 +46,8 @@ def crear_graficos(df):
     # ------------------------------
     st.sidebar.header("Filtros")
 
+
+    # Para elegir estado
     estado_sel = st.sidebar.selectbox(
         "Selecciona un estado",
         ["Todos"] + sorted(df["Estado"].unique())
@@ -71,10 +77,12 @@ def crear_graficos(df):
     st.sidebar.write("### Indicadores a incluir:")
     indicadores_sel = []
 
+    # Seleccionar casilla para indicadores
     for ind in indicadores:
         if st.sidebar.checkbox(ind, value=True):
             indicadores_sel.append(ind)
 
+    # Si no hay seleccion, una advertencia
     if len(indicadores_sel) == 0:
         st.warning("Selecciona al menos un indicador.")
         st.stop()
@@ -87,7 +95,7 @@ def crear_graficos(df):
 
     df_f = df_f[(df_f["Año"] >= años[0]) & (df_f["Año"] <= años[1])]
 
-    # 1) MAPA DE RIESGO
+    # 1) Grafica 1:  MAPA DE RIESGO
     st.subheader("Mapa de Riesgo — Descargas sin tratamiento / Tomas totales")
 
     df_f["descargas_sin_tratamiento_totales"] = (
@@ -104,18 +112,22 @@ def crear_graficos(df):
         df_f["tomas_sin_macromedidor"]
     )
 
+    # Agrupacion
     df_riesgo = df_f.groupby("Estado").agg({
         "descargas_totales": "sum",
         "tomas_totales": "sum"
     }).reset_index()
 
+    # Calculo para descargas entre tomas
     df_riesgo["riesgo"] = (
         df_riesgo["descargas_totales"] / df_riesgo["tomas_totales"]
     ).replace([float("inf"), -float("inf")], 0)
 
+    # Descargar mapa de Mexico por internet
     url_geojson = "https://raw.githubusercontent.com/angelnmara/geojson/master/mexicoHigh.json"
     geojson_mex = requests.get(url_geojson).json()
 
+    # Representacion del riesgo en el mapa
     fig_riesgo = px.choropleth(
         df_riesgo,
         geojson=geojson_mex,
@@ -128,7 +140,7 @@ def crear_graficos(df):
     fig_riesgo.update_geos(fitbounds="locations", visible=False)
     st.plotly_chart(fig_riesgo, use_container_width=True)
 
-    # 2) Scatter
+    # 2) Grafica 2: Scatter
     st.subheader("Ineficiencia — Tomas sin medidor vs. Medidores descompuestos")
 
     fig_scatter = px.scatter(
@@ -138,7 +150,9 @@ def crear_graficos(df):
         color="Estado"
     )
     st.plotly_chart(fig_scatter, use_container_width=True)
-    # 3) Pareto
+
+
+    # 3) Grafica 3: Pareto
     st.subheader("Pareto — Estados con más descargas sin tratamiento")
 
     df_pareto = df_riesgo.sort_values("descargas_totales", ascending=False)
@@ -153,7 +167,7 @@ def crear_graficos(df):
     )
     st.plotly_chart(fig_pareto, use_container_width=True)
 
-    # 4) Correlaciones
+    # 4) Grafica 4: Correlaciones
     st.subheader("Matriz de correlaciones entre indicadores seleccionados")
 
     corr = df_f[indicadores_sel].corr()
@@ -165,7 +179,7 @@ def crear_graficos(df):
     )
     st.plotly_chart(fig_corr, use_container_width=True)
 
-    # 5) Piechart
+    # 5) Grafica 5:  Piechart
     st.subheader("Proporción nacional de tipos de descarga")
 
     df_pie = df_f[[
@@ -180,7 +194,7 @@ def crear_graficos(df):
     fig_pie = px.pie(df_pie, names="Tipo", values="Valor")
     st.plotly_chart(fig_pie, use_container_width=True)
 
-    # 6) Boxplot
+    # 6) Grafica: Boxplot
     st.subheader("Distribución nacional (Boxplot)")
 
     df_box_long = df_f[indicadores_sel].melt(var_name="Indicador", value_name="Valor")
@@ -188,7 +202,7 @@ def crear_graficos(df):
     fig_box = px.box(df_box_long, x="Indicador", y="Valor")
     st.plotly_chart(fig_box, use_container_width=True)
 
-    # 7) 100% Stacked
+    # 7) Grafica 7: 100% Stacked
     st.subheader("Estructura de descargas por estado (100% Stacked)")
 
     df_stack = df_f.groupby("Estado")[
@@ -213,7 +227,7 @@ def crear_graficos(df):
     )
     st.plotly_chart(fig_stack, use_container_width=True)
 
-    # 8) Bubble chart
+    # 8) Grafica 8: Bubble chart
     st.subheader("Bubble Chart — Prioridades por estado")
 
     df_bubble = df_f.groupby("Estado").agg({
@@ -232,7 +246,7 @@ def crear_graficos(df):
     st.plotly_chart(fig_bubble, use_container_width=True)
 
 
-    # 9) Recomendacion automatica
+    # 9) Tabla Recomendacion automatica
     st.subheader("Recomendación automática según riesgo")
 
     df_rec = df_riesgo.copy()

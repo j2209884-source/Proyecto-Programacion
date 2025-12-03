@@ -39,7 +39,7 @@ def crear_graficos(df):
         ].sum().sum()
         st.metric("Total Descargas", round(total_descargas))
     with kpi2:
-        # Total tomas funcionand
+        # Total tomas funcionando
         total_funcionando = df_filtrado["tomas_macromedidor_funcionando"].sum()
         st.metric("Tomas funcionando", round(total_funcionando))
 
