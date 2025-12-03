@@ -7,8 +7,8 @@ import json
 
 
 @st.cache_data
-def cargar_datos():
-    df = pd.read_csv("dataframes/datos_formato_ancho.csv")
+def leer_archivo(ruta):
+    df = pd.read_csv(ruta)
 
     df["descargas_totales"] = (
         df["descargas_municipales_sin_tratamiento"] +
@@ -32,7 +32,7 @@ def cargar_datos():
     return df
 
 
-def dashboard3(df):
+def crear_graficos(df):
 
     st.title("Evaluación de Riesgo Hídrico en México")
     st.write("Análisis avanzado basado en descargas y tomas de agua.")
@@ -245,13 +245,17 @@ def dashboard3(df):
 
     st.dataframe(df_rec)
 
-def app_streamlit_dashboard3(df):
+def app():
     st.set_page_config(page_title="Evaluación de Riesgo Hídrico", layout="wide")
     st.title("Evaluación de Riesgo Hídrico en México")
     st.subheader("Dashboard basado en patrones de descarga y tomas de agua")
     st.divider()
-    dashboard3(df)
+
+    # cargar datos
+    df = leer_archivo("dataframes/datos_formato_ancho.csv")
+    crear_graficos(df)
+
 
 if __name__ == "__main__":
-    df = cargar_datos()
-    app_streamlit_dashboard3(df)
+    app()
+

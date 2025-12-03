@@ -2,6 +2,7 @@ import streamlit as st
 
 from pages import Dashboard_1,Dashboard_2,Dashboard_3
 
+
 st.set_page_config(page_title="Proyecto Final", layout="wide")
 
 st.title("🌎 Bienvenido al Proyecto Final")
@@ -13,7 +14,7 @@ if page == "Inicio":
     st.markdown("Bienvenida e instrucciones...")
     st.write("")
 elif page == "Dashboard 1":
-    Dashboard_1.py.app()
+    Dashboard_1.app()
 elif page == "Dashboard 2":
     Dashboard_2.app()
 elif page == "Dashboard 3":
