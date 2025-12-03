@@ -226,5 +226,5 @@ def app_streamlit(df):
 
 
 if __name__ == "__main__":
-    data = leer_archivo("datos_formato_ancho.csv")
+    data = leer_archivo("dataframes/datos_formato_ancho.csv")
     app_streamlit(data)
