@@ -61,7 +61,7 @@ def crear_graficos(df):
     col1, col2 = st.columns(2, gap="large") #Controla el espacio entre columnas
     with col1:
         # Gráfico 1
-        st.subheader("DDescargas sin Tratamiento (Río)")
+        st.subheader("Descargas sin Tratamiento (Río)")
         fig_sin_tratamiento_rio = px.bar(
             df_filtrado,
             x="descargas_sin_tratamiento_rio",
@@ -69,7 +69,7 @@ def crear_graficos(df):
             orientation="h",
             color="Estado",
             color_discrete_sequence=px.colors.qualitative.Pastel,
-            height=400)
+            height=600)
         fig_sin_tratamiento_rio.update_layout(
             xaxis_title="Cantidad de descargas",
             yaxis_title="Estado", showlegend=False)
@@ -85,7 +85,7 @@ def crear_graficos(df):
             orientation="h",
             color="Estado",
             color_discrete_sequence=px.colors.qualitative.Set1,
-            height=400)
+            height=600)
         fig_sin_tratamiento_mar.update_layout(
             xaxis_title="Cantidad de descargas",
             yaxis_title="Estado", showlegend=False)
@@ -102,7 +102,7 @@ def crear_graficos(df):
             orientation="h",
             color="Estado",
             color_discrete_sequence=px.colors.qualitative.Set2,
-            height=400)
+            height=600)
         fig_sin_tratamiento_lago.update_layout(
             xaxis_title="Cantidad de descargas",
             yaxis_title="Estado", showlegend=False)
@@ -116,7 +116,7 @@ def crear_graficos(df):
             x="Estado",
             y=["descargas_sin_tratamiento_rio","descargas_sin_tratamiento_mar","descargas_sin_tratamiento_lago","descargas_municipales_sin_tratamiento"],
             color_discrete_sequence=px.colors.qualitative.Bold,
-            height=400)
+            height=600)
         fig_sin_tratamiento_total.update_layout(
             barmode="relative",
             xaxis_title="Estado",
@@ -146,7 +146,7 @@ def crear_graficos(df):
             values="Cantidad",
             color="Categoria",
             color_discrete_sequence=px.colors.qualitative.Pastel,
-            height=400)
+            height=600)
 
         fig_medidor_funcionando.update_traces(textinfo='percent+label')
         st.plotly_chart(fig_medidor_funcionando, use_container_width=True)
@@ -170,7 +170,7 @@ def crear_graficos(df):
             color_continuous_scale="Reds",
             hover_name='Estado',
             hover_data={'percentage': False, 'Porcentaje': True},
-            height=400)
+            height=600)
 
         fig_sin_macromedidor.update_geos(fitbounds="locations", visible=True)
         fig_sin_macromedidor.update_geos(showcountries=True, showcoastlines=True, showland=True, fitbounds="locations")
@@ -192,7 +192,7 @@ def crear_graficos(df):
             orientation="h",
             color="tomas_macromedidor_funcionando",
             color_continuous_scale="Blues",
-            height=400)
+            height=600)
         fig_top10_funcionando.update_layout(
             xaxis_title="Cantidad de Macromedidores Funcionando",
             yaxis_title="Estado",
@@ -209,7 +209,7 @@ def crear_graficos(df):
             color="Estado",
             size="descargas_municipales_sin_tratamiento",
             color_discrete_sequence=px.colors.qualitative.Set1,
-            height=400)
+            height=600)
         fig_relacion.update_layout(xaxis_title="Cantidad de tomas sin macromedidor",yaxis_title="Descargas municipales sin tratamiento")
         st.plotly_chart(fig_relacion, use_container_width=True)
 
